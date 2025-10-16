@@ -47,10 +47,9 @@ _* position은 수집되었으나 현재 DB 스키마에 없어서 저장되지 
 
 ### 3. Supabase RLS 정책
 - **문제**: Anon 키로는 읽기만 가능, 쓰기 불가
-- **해결**: 유효한 service_role 키 적용
-  ```
-  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vcHdzZ2tudmNlamZjbWdldml2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDUzMzU4MCwiZXhwIjoyMDc2MTA5NTgwfQ.JKQUYegSMyT1WU_RXmSTEKAk5fxvlWLxOBdZjrMG0rg
-  ```
+- **해결**: Service role 키를 환경변수로 설정하여 적용
+  - `.env` 파일에 `SUPABASE_SERVICE_ROLE_KEY` 설정
+  - **보안 주의**: Service role 키는 절대 코드나 문서에 포함하지 말 것
 
 ### 4. 데이터베이스 스키마 불일치
 - **문제**: `position` 필드가 DB 테이블에 없음
