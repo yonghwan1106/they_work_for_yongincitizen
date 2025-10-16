@@ -40,8 +40,25 @@ export default async function CouncillorsPage({
     .select('party, district')
     .eq('is_active', true)
 
+  // District name mapping with actual dong/eup names
+  const districtNames: { [key: string]: string } = {
+    '가선거구': '가선거구 (포곡읍, 모현읍, 역북동, 삼가동, 유림동)',
+    '나선거구': '나선거구 (중앙동, 이동읍, 남사읍)',
+    '다선거구': '다선거구 (양지면, 동부동, 원삼면, 백암면)',
+    '라선거구': '라선거구 (신갈동, 영덕1동, 영덕2동, 기흥동, 서농동)',
+    '마선거구': '마선거구 (구갈동, 상갈동)',
+    '바선거구': '바선거구 (보라동, 동백3동, 상하동)',
+    '사선거구': '사선거구 (상현1동, 상현3동)',
+    '아선거구': '아선거구 (풍덕천1동, 풍덕천2동, 죽전2동)',
+    '자선거구': '자선거구 (신봉동, 동천동, 성복동)',
+    '차선거구': '차선거구 (구성동, 마북동, 동백1동, 동백2동)',
+    '카선거구': '카선거구 (보정동, 죽전1동, 죽전3동, 상현2동)',
+    '비례대표': '비례대표'
+  }
+
   const parties = Array.from(new Set(allCouncillors?.map(c => c.party).filter(Boolean))) as string[]
   const districts = Array.from(new Set(allCouncillors?.map(c => c.district).filter(Boolean))) as string[]
+    .sort((a, b) => a.localeCompare(b, 'ko-KR'))
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -113,7 +130,7 @@ export default async function CouncillorsPage({
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {district}
+                      {districtNames[district] || district}
                     </Link>
                   ))}
                 </div>
