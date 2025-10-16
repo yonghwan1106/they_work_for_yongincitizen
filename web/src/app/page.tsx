@@ -8,7 +8,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              그들은 용인시민을 위해 일합니다
+              그들은 용인시민을 위해 일합니까?
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-blue-100">
               용인특례시의회 의원들의 활동을 투명하게 공개합니다

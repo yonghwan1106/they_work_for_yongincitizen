@@ -6,7 +6,7 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold text-gray-900">
-            그들은 용인시민을 위해 일합니다
+            그들은 용인시민을 위해 일합니까?
           </Link>
           <nav className="hidden md:flex space-x-8">
             <Link href="/councillors" className="text-gray-700 hover:text-gray-900 transition-colors">

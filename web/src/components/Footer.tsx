@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-lg font-bold mb-4">그들은 용인시민을 위해 일합니다</h3>
+            <h3 className="text-lg font-bold mb-4">그들은 용인시민을 위해 일합니까?</h3>
             <p className="text-gray-400 text-sm">
               용인특례시의회 의정활동을 투명하게 공개하고 시민의 알 권리를 실현합니다.
             </p>
@@ -37,7 +37,7 @@ export default function Footer() {
             모든 데이터는 용인특례시의회 공식 웹사이트에서 제공하는 공개 정보를 기반으로 합니다.
           </p>
           <p className="mt-2">
-            © {new Date().getFullYear()} 그들은 용인시민을 위해 일합니다. All rights reserved.
+            © {new Date().getFullYear()} 그들은 용인시민을 위해 일합니까? All rights reserved.
           </p>
         </div>
       </div>

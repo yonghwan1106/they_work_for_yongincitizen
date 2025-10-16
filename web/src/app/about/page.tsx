@@ -12,7 +12,7 @@ export default function AboutPage() {
             하는지 파악하기 어려운 실정입니다.
           </p>
           <p>
-            <strong>&quot;그들은 용인시민을 위해 일합니다&quot;</strong>는 영국의 성공적인 의회 모니터링
+            <strong>&quot;그들은 용인시민을 위해 일합니까?&quot;</strong>는 영국의 성공적인 의회 모니터링
             플랫폼인 TheyWorkForYou를 벤치마킹하여, 용인시의회의 공개 데이터를 시민들이
             쉽게 이해하고 활용할 수 있도록 재구성한 비영리 시민 프로젝트입니다.
           </p>
