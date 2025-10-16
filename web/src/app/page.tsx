@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CafePostsList from "@/components/CafePostsList";
 
 export default function Home() {
   return (
@@ -26,6 +27,28 @@ export default function Home() {
               >
                 회의록 검색
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Cafe Posts Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-bold">용인블루 최신 소식</h2>
+              <Link
+                href="https://cafe.naver.com/yonginblue"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 font-semibold"
+              >
+                카페 방문하기 →
+              </Link>
+            </div>
+            <div className="bg-gray-50 rounded-lg overflow-hidden shadow-md">
+              <CafePostsList />
             </div>
           </div>
         </div>
