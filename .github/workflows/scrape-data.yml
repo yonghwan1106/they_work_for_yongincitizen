@@ -1,0 +1,66 @@
+name: Daily Data Scraping
+
+on:
+  # 매일 한국시간 오전 6시에 실행 (UTC 21:00 = KST 06:00)
+  schedule:
+    - cron: '0 21 * * *'
+
+  # 수동 실행 가능
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd scraper
+          pip install -r requirements.txt
+
+      - name: Run scrapers
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          cd scraper
+
+          # 1. 의원 정보 업데이트 (주 1회만 - 월요일에만 실행)
+          if [ "$(date +%u)" -eq 1 ]; then
+            echo "Running councillors scraper (Monday only)..."
+            python -m scrapers.councillors
+          fi
+
+          # 2. 회의록 수집 (매일 - 최근 3페이지)
+          echo "Running meetings scraper..."
+          python -m scrapers.meetings
+
+          # 3. 회의록 전문 업데이트 (새로운 회의록만)
+          echo "Updating meeting transcripts..."
+          python update_transcripts.py
+
+          # 4. 의안 수집 (매일 - 최근 3페이지)
+          echo "Running bills scraper..."
+          python -m scrapers.bills
+
+          # 5. 위원회 정보 업데이트
+          echo "Extracting committees..."
+          python extract_committees.py
+
+          # 6. 회의록-위원회 연결
+          echo "Linking meetings to committees..."
+          python link_meetings_to_committees.py
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Scraping failed! Check the logs for details."
+          # 여기에 Slack/Discord webhook 추가 가능

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/**)",
+      "Bash(dir:*)",
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev)",
+      "WebFetch(domain:council.yongin.go.kr)",
+      "Bash(python -m pip install:*)",
+      "Bash(python:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: 용인시의회 모니터링 플랫폼\n\nPhase 1 데이터 수집 완료:\n- 의원 정보 31명 수집\n- 회의록 30건 (전문 텍스트 포함)\n- 위원회 7개 추출 및 연결\n- 의안 30건 수집\n- GitHub Actions 자동화 설정\n\nFeatures:\n- Next.js 15 웹 애플리케이션\n- Python 스크레이퍼 (BeautifulSoup)\n- Supabase 데이터베이스\n- 일일 자동 업데이트\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
