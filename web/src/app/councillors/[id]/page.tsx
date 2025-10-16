@@ -233,7 +233,7 @@ export default async function CouncillorDetailPage({
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow divide-y">
-              {speeches.map((speech: any) => (
+              {speeches.map((speech) => (
                 <div key={speech.id} className="p-4">
                   <div className="mb-2">
                     {speech.meeting && (
@@ -274,7 +274,7 @@ export default async function CouncillorDetailPage({
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow divide-y">
-              {votes.map((vote: any) => (
+              {votes.map((vote) => (
                 <div key={vote.id} className="p-4 flex items-start justify-between">
                   <div className="flex-1">
                     {vote.bill && (

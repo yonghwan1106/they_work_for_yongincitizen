@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Bill } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,7 +64,7 @@ export default async function BillsPage({
                   처리 상태
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  <a
+                  <Link
                     href="/bills"
                     className={`px-3 py-1 rounded-full text-sm ${
                       !params.status
@@ -74,9 +73,9 @@ export default async function BillsPage({
                     }`}
                   >
                     전체
-                  </a>
+                  </Link>
                   {statuses.map((status) => (
-                    <a
+                    <Link
                       key={status}
                       href={`/bills?status=${encodeURIComponent(status)}`}
                       className={`px-3 py-1 rounded-full text-sm ${
@@ -86,7 +85,7 @@ export default async function BillsPage({
                       }`}
                     >
                       {status}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -98,7 +97,7 @@ export default async function BillsPage({
                   의안 유형
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  <a
+                  <Link
                     href="/bills"
                     className={`px-3 py-1 rounded-full text-sm ${
                       !params.type
@@ -107,9 +106,9 @@ export default async function BillsPage({
                     }`}
                   >
                     전체
-                  </a>
+                  </Link>
                   {billTypes.map((type) => (
-                    <a
+                    <Link
                       key={type}
                       href={`/bills?type=${encodeURIComponent(type)}`}
                       className={`px-3 py-1 rounded-full text-sm ${
@@ -119,7 +118,7 @@ export default async function BillsPage({
                       }`}
                     >
                       {type}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -149,7 +148,7 @@ export default async function BillsPage({
             총 <strong>{bills.length}건</strong>의 의안
           </div>
           <div className="bg-white rounded-lg shadow divide-y">
-            {bills.map((bill: any) => (
+            {bills.map((bill) => (
               <Link
                 key={bill.id}
                 href={`/bills/${bill.id}`}

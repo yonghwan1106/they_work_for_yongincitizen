@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import CouncillorCard from '@/components/CouncillorCard'
+import Link from 'next/link'
 import { Councillor } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -59,7 +60,7 @@ export default async function CouncillorsPage({
                   정당별
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  <a
+                  <Link
                     href="/councillors"
                     className={`px-3 py-1 rounded-full text-sm ${
                       !params.party
@@ -68,9 +69,9 @@ export default async function CouncillorsPage({
                     }`}
                   >
                     전체
-                  </a>
+                  </Link>
                   {parties.map((party) => (
-                    <a
+                    <Link
                       key={party}
                       href={`/councillors?party=${encodeURIComponent(party)}`}
                       className={`px-3 py-1 rounded-full text-sm ${
@@ -80,7 +81,7 @@ export default async function CouncillorsPage({
                       }`}
                     >
                       {party}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -92,7 +93,7 @@ export default async function CouncillorsPage({
                   지역구별
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  <a
+                  <Link
                     href="/councillors"
                     className={`px-3 py-1 rounded-full text-sm ${
                       !params.district
@@ -101,9 +102,9 @@ export default async function CouncillorsPage({
                     }`}
                   >
                     전체
-                  </a>
+                  </Link>
                   {districts.map((district) => (
-                    <a
+                    <Link
                       key={district}
                       href={`/councillors?district=${encodeURIComponent(district)}`}
                       className={`px-3 py-1 rounded-full text-sm ${
@@ -113,7 +114,7 @@ export default async function CouncillorsPage({
                       }`}
                     >
                       {district}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>

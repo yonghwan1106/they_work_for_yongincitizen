@@ -4,6 +4,5 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["icn1"],
-  "rootDirectory": "web"
+  "regions": ["icn1"]
 }

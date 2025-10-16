@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Meeting } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,7 +58,7 @@ export default async function MeetingsPage({
 
           {meetingTypes.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              <a
+              <Link
                 href="/meetings"
                 className={`px-3 py-1 rounded-full text-sm ${
                   !params.type
@@ -68,9 +67,9 @@ export default async function MeetingsPage({
                 }`}
               >
                 전체
-              </a>
+              </Link>
               {meetingTypes.map((type) => (
-                <a
+                <Link
                   key={type}
                   href={`/meetings?type=${encodeURIComponent(type)}`}
                   className={`px-3 py-1 rounded-full text-sm ${
@@ -80,7 +79,7 @@ export default async function MeetingsPage({
                   }`}
                 >
                   {type}
-                </a>
+                </Link>
               ))}
             </div>
           )}
@@ -108,7 +107,7 @@ export default async function MeetingsPage({
             총 <strong>{meetings.length}건</strong>의 회의록
           </div>
           <div className="bg-white rounded-lg shadow divide-y">
-            {meetings.map((meeting: any) => (
+            {meetings.map((meeting) => (
               <Link
                 key={meeting.id}
                 href={`/meetings/${meeting.id}`}
