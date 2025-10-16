@@ -57,7 +57,7 @@ export default async function CouncillorsPage({
   }
 
   const parties = Array.from(new Set(allCouncillors?.map(c => c.party).filter(Boolean))) as string[]
-  const districts = Array.from(new Set(allCouncillors?.map(c => c.district).filter(Boolean))) as string[]
+  const districts = (Array.from(new Set(allCouncillors?.map(c => c.district).filter(Boolean))) as string[])
     .sort((a, b) => a.localeCompare(b, 'ko-KR'))
 
   return (
