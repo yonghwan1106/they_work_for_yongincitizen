@@ -39,8 +39,6 @@ async function seedAllCouncillors() {
           email: councillor.email,
           phone: councillor.phone,
           office_location: councillor.office_location,
-        }, {
-          onConflict: 'name,councillor_type,district',
         });
 
       if (error) {
@@ -67,8 +65,6 @@ async function seedAllCouncillors() {
           profile_url: councillor.profile_url,
           term_number: 11, // 제11대 경기도의회
           is_active: true,
-        }, {
-          onConflict: 'name,councillor_type,district',
         });
 
       if (error) {
