@@ -31,6 +31,7 @@ export type MeetingWithDetails = Meeting & {
 
 // Filter and sort types
 export type CouncillorFilter = {
+  councillor_type?: string
   party?: string
   district?: string
   is_active?: boolean

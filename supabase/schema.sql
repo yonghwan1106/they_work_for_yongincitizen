@@ -15,6 +15,7 @@ CREATE TABLE councillors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
     name_en VARCHAR(100),
+    councillor_type VARCHAR(20) NOT NULL DEFAULT \'용인시의원\' CHECK (councillor_type IN (\'국회의원\', \'경기도의원\', \'용인시의원\')), -- 의원 유형: 국회의원, 경기도의원, 용인시의원
     party VARCHAR(50), -- 정당
     district VARCHAR(100), -- 선거구
     photo_url TEXT,
@@ -200,6 +201,7 @@ CREATE TABLE speech_embeddings (
 CREATE INDEX idx_councillors_name ON councillors(name);
 CREATE INDEX idx_councillors_party ON councillors(party);
 CREATE INDEX idx_councillors_district ON councillors(district);
+CREATE INDEX idx_councillors_type ON councillors(councillor_type);
 CREATE INDEX idx_councillors_active ON councillors(is_active);
 
 -- Meetings

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 export default async function CouncillorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ party?: string; district?: string }>
+  searchParams: Promise<{ councillor_type?: string; party?: string; district?: string }>
 }) {
   const params = await searchParams
   const supabase = await createClient()
@@ -21,6 +21,9 @@ export default async function CouncillorsPage({
     .order('name')
 
   // Apply filters
+  if (params.councillor_type) {
+    query = query.eq('councillor_type', params.councillor_type)
+  }
   if (params.party) {
     query = query.eq('party', params.party)
   }
@@ -34,10 +37,10 @@ export default async function CouncillorsPage({
     console.error('Error fetching councillors:', error)
   }
 
-  // Get unique parties and districts for filters
+  // Get unique councillor types, parties and districts for filters
   const { data: allCouncillors } = await supabase
     .from('councillors')
-    .select('party, district')
+    .select('councillor_type, party, district')
     .eq('is_active', true)
 
   // District name mapping with actual dong/eup names
@@ -56,6 +59,7 @@ export default async function CouncillorsPage({
     '비례대표': '비례대표'
   }
 
+  const councillorTypes = ['국회의원', '경기도의원', '용인시의원']
   const parties = Array.from(new Set(allCouncillors?.map(c => c.party).filter(Boolean))) as string[]
   const districts = (Array.from(new Set(allCouncillors?.map(c => c.district).filter(Boolean))) as string[])
     .sort((a, b) => a.localeCompare(b, 'ko-KR'))
@@ -63,14 +67,48 @@ export default async function CouncillorsPage({
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">의원 소개</h1>
-        <p className="text-gray-600">용인특례시의회 현역 의원 정보</p>
+        <h1 className="text-3xl font-bold mb-2">선출직 공직자 소개</h1>
+        <p className="text-gray-600">용인시 선거구 국회의원, 경기도의원, 용인시의원 정보</p>
       </div>
 
       {/* Filters */}
-      {(parties.length > 0 || districts.length > 0) && (
+      {(councillorTypes.length > 0 || parties.length > 0 || districts.length > 0) && (
         <div className="bg-white rounded-lg shadow p-4 mb-6">
           <div className="flex flex-wrap gap-4">
+            {/* Councillor Type Filter */}
+            {councillorTypes.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  의원 유형
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href="/councillors"
+                    className={`px-3 py-1 rounded-full text-sm ${
+                      !params.councillor_type
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    전체
+                  </Link>
+                  {councillorTypes.map((type) => (
+                    <Link
+                      key={type}
+                      href={`/councillors?councillor_type=${encodeURIComponent(type)}`}
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        params.councillor_type === type
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {type}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {parties.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
