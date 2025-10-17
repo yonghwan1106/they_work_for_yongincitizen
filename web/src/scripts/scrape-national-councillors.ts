@@ -63,11 +63,18 @@ export async function scrapeNationalCouncillor(
     const partyEl = root.querySelector('.party, .political-party, .member-party, .info-party');
     const party = partyEl?.textContent.trim() || '더불어민주당'; // 기본값
 
-    // 사진 URL 추출
-    const photoEl = root.querySelector('.profile-photo img, .member-photo img, .photo img');
-    let photo_url = photoEl?.getAttribute('src') || '';
-    if (photo_url && !photo_url.startsWith('http')) {
-      photo_url = `https://www.assembly.go.kr${photo_url}`;
+    // 사진 URL 추출 - background-image로 되어 있음
+    const photoSpan = root.querySelector('span.img[style*="background-image"]');
+    let photo_url = '';
+    if (photoSpan) {
+      const style = photoSpan.getAttribute('style') || '';
+      const match = style.match(/background-image:\s*url\(['"]?([^'"]+)['"]?\)/);
+      if (match && match[1]) {
+        photo_url = match[1];
+        if (!photo_url.startsWith('http')) {
+          photo_url = `https://www.assembly.go.kr${photo_url}`;
+        }
+      }
     }
 
     // 위원회 정보 추출
