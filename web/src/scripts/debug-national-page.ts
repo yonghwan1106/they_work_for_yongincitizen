@@ -44,9 +44,9 @@ async function debugNationalPage() {
         // 이미지의 경우 src 확인
         if (selector.includes('img')) {
           const srcs = await page.locator(selector).evaluateAll((elements) =>
-            elements.map((el: any) => ({
-              src: el.src,
-              alt: el.alt
+            elements.map((el) => ({
+              src: (el as HTMLImageElement).src,
+              alt: (el as HTMLImageElement).alt
             }))
           );
           console.log('  이미지 정보:', srcs.slice(0, 3));

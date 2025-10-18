@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Required environment variables are missing');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -19,64 +24,28 @@ async function applyMigration() {
     });
 
     if (addColumnError) {
-      // If rpc doesn't exist, we'll try a workaround using a dummy insert/update
-      console.log('RPC method not available, trying alternative method...');
-
-      // We'll use the REST API directly to execute SQL
-      // This is a workaround - ideally you'd use Supabase CLI or dashboard
-      console.log('Please run the following SQL in Supabase dashboard:');
-      console.log(`
-ALTER TABLE councillors
-ADD COLUMN IF NOT EXISTS councillor_type VARCHAR(20) NOT NULL DEFAULT '용인시의원';
-
-ALTER TABLE councillors
-ADD CONSTRAINT councillor_type_check
-CHECK (councillor_type IN ('국회의원', '경기도의원', '용인시의원'));
-
-CREATE INDEX IF NOT EXISTS idx_councillors_type ON councillors(councillor_type);
-      `);
-
-      console.log('\nOr run: npx supabase db push');
-      process.exit(1);
+      console.error('Error adding column:', addColumnError);
+      return;
     }
 
     console.log('✓ Column added successfully');
 
-    // Step 2: Add check constraint
-    console.log('Step 2: Adding check constraint...');
-    await supabase.rpc('exec', {
-      sql: `
-        ALTER TABLE councillors
-        DROP CONSTRAINT IF EXISTS councillor_type_check;
+    // Step 2: Update existing records
+    console.log('Step 2: Updating existing records...');
+    const { error: updateError } = await supabase
+      .from('councillors')
+      .update({ councillor_type: '용인시의원' })
+      .is('councillor_type', null);
 
-        ALTER TABLE councillors
-        ADD CONSTRAINT councillor_type_check
-        CHECK (councillor_type IN ('국회의원', '경기도의원', '용인시의원'));
-      `
-    });
+    if (updateError) {
+      console.error('Error updating records:', updateError);
+      return;
+    }
 
-    console.log('✓ Check constraint added');
-
-    // Step 3: Add index
-    console.log('Step 3: Adding index...');
-    await supabase.rpc('exec', {
-      sql: `
-        CREATE INDEX IF NOT EXISTS idx_councillors_type ON councillors(councillor_type);
-      `
-    });
-
-    console.log('✓ Index added');
-
-    console.log('\n✅ Migration completed successfully!');
+    console.log('✓ Migration completed successfully');
 
   } catch (error) {
-    console.error('❌ Error applying migration:', error);
-    console.log('\nPlease apply the migration manually in Supabase dashboard:');
-    console.log('1. Go to https://supabase.com/dashboard');
-    console.log('2. Select your project');
-    console.log('3. Go to SQL Editor');
-    console.log('4. Run the SQL from: web/src/scripts/add-councillor-type-column.sql');
-    process.exit(1);
+    console.error('Migration failed:', error);
   }
 }
 

@@ -24,7 +24,7 @@ async function seedAllCouncillors() {
 
     console.log('\n국회의원 데이터 Supabase에 저장 중...');
     for (const councillor of nationalCouncillors) {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('councillors')
         .upsert({
           name: councillor.name,
@@ -54,7 +54,7 @@ async function seedAllCouncillors() {
 
     console.log('\n경기도의원 데이터 Supabase에 저장 중...');
     for (const councillor of provincialCouncillors) {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('councillors')
         .upsert({
           name: councillor.name,
