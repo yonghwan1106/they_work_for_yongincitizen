@@ -15,7 +15,7 @@ CREATE TABLE councillors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
     name_en VARCHAR(100),
-    councillor_type VARCHAR(20) NOT NULL DEFAULT \'용인시의원\' CHECK (councillor_type IN (\'국회의원\', \'경기도의원\', \'용인시의원\')), -- 의원 유형: 국회의원, 경기도의원, 용인시의원
+    councillor_type VARCHAR(20) NOT NULL DEFAULT '용인시의원' CHECK (councillor_type IN ('국회의원', '경기도의원', '용인시의원')), -- 의원 유형: 국회의원, 경기도의원, 용인시의원
     party VARCHAR(50), -- 정당
     district VARCHAR(100), -- 선거구
     photo_url TEXT,
