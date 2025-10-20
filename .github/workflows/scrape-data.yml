@@ -40,7 +40,17 @@ jobs:
           # Track overall success
           OVERALL_STATUS=0
 
-          # 1. 의원 정보 업데이트 (주 1회만 - 월요일에만 실행)
+          # 1. 네이버 카페 최신글 수집 (매일 - 홈페이지 표시용)
+          echo "=== Running cafe posts scraper ==="
+          python -m scrapers.cafe_posts
+          if [ $? -ne 0 ]; then
+            echo "⚠️ Cafe posts scraper failed"
+            OVERALL_STATUS=1
+          else
+            echo "✅ Cafe posts scraper completed"
+          fi
+
+          # 2. 의원 정보 업데이트 (주 1회만 - 월요일에만 실행)
           if [ "$(date +%u)" -eq 1 ]; then
             echo "=== Running councillors scraper (Monday only) ==="
             python -m scrapers.councillors
@@ -52,7 +62,7 @@ jobs:
             fi
           fi
 
-          # 2. 회의록 수집 (매일 - 최근 3페이지)
+          # 3. 회의록 수집 (매일 - 최근 3페이지)
           echo "=== Running meetings scraper ==="
           python -m scrapers.meetings
           if [ $? -ne 0 ]; then
@@ -62,7 +72,7 @@ jobs:
             echo "✅ Meetings scraper completed"
           fi
 
-          # 3. 회의록 전문 업데이트 (새로운 회의록만)
+          # 4. 회의록 전문 업데이트 (새로운 회의록만)
           echo "=== Updating meeting transcripts ==="
           python update_transcripts.py
           if [ $? -ne 0 ]; then
@@ -72,7 +82,7 @@ jobs:
             echo "✅ Update transcripts completed"
           fi
 
-          # 4. 의안 수집 (매일 - 최근 3페이지)
+          # 5. 의안 수집 (매일 - 최근 3페이지)
           echo "=== Running bills scraper ==="
           python -m scrapers.bills
           if [ $? -ne 0 ]; then
@@ -82,7 +92,7 @@ jobs:
             echo "✅ Bills scraper completed"
           fi
 
-          # 5. 위원회 정보 업데이트
+          # 6. 위원회 정보 업데이트
           echo "=== Extracting committees ==="
           python extract_committees.py
           if [ $? -ne 0 ]; then
@@ -92,7 +102,7 @@ jobs:
             echo "✅ Extract committees completed"
           fi
 
-          # 6. 회의록-위원회 연결
+          # 7. 회의록-위원회 연결
           echo "=== Linking meetings to committees ==="
           python link_meetings_to_committees.py
           if [ $? -ne 0 ]; then
@@ -102,7 +112,7 @@ jobs:
             echo "✅ Link meetings to committees completed"
           fi
 
-          # 7. 회의록 전문 추출 (새로운 회의록만)
+          # 8. 회의록 전문 추출 (새로운 회의록만)
           echo "=== Extracting full transcripts ==="
           python extract_transcripts.py --limit 20
           if [ $? -ne 0 ]; then
@@ -112,7 +122,7 @@ jobs:
             echo "✅ Extract transcripts completed"
           fi
 
-          # 8. AI 발언 추출 및 요약 (ANTHROPIC_API_KEY가 있을 때만 실행)
+          # 9. AI 발언 추출 및 요약 (ANTHROPIC_API_KEY가 있을 때만 실행)
           if [ -n "$ANTHROPIC_API_KEY" ]; then
             echo "=== Extracting speeches with AI ==="
             python extract_speeches.py --limit 10
