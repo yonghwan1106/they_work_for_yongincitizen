@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import SpeechCard from '@/components/SpeechCard'
+import VoteCard from '@/components/VoteCard'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,23 +38,23 @@ export default async function CouncillorDetailPage({
     .from('speeches')
     .select(`
       *,
-      meeting:meetings(title, meeting_date, meeting_type)
+      meeting:meetings(id, title, meeting_date, meeting_type)
     `)
     .eq('councillor_id', id)
     .order('created_at', { ascending: false })
-    .limit(10)
+    .limit(20)
 
-  // Fetch votes by this councillor
+  // Fetch votes by this councillor (both verified and unverified)
   const { data: votes } = await supabase
     .from('votes')
     .select(`
       *,
-      bill:bills(title, bill_type)
+      bill:bills(id, title, bill_type, bill_number, proposal_date)
     `)
     .eq('councillor_id', id)
-    .eq('is_verified', true)
+    .order('is_verified', { ascending: false })
     .order('created_at', { ascending: false })
-    .limit(10)
+    .limit(20)
 
   const getPartyColor = (party: string | null) => {
     if (!party) return 'bg-gray-100 text-gray-800'
@@ -226,40 +228,30 @@ export default async function CouncillorDetailPage({
 
         {/* Speeches Section */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">최근 발언</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">최근 발언</h2>
+            {speeches && speeches.length > 0 && (
+              <div className="text-sm text-gray-600">
+                총 {speeches.length}건
+              </div>
+            )}
+          </div>
           {!speeches || speeches.length === 0 ? (
             <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-600">
-              발언 기록이 없거나 데이터가 수집되지 않았습니다.
+              <p className="text-lg font-medium mb-2">발언 기록이 없습니다</p>
+              <p className="text-sm">
+                이 의원의 발언 기록이 아직 수집되지 않았거나, AI 분석이 진행 중입니다.
+              </p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow divide-y">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
               {speeches.map((speech) => (
-                <div key={speech.id} className="p-4">
-                  <div className="mb-2">
-                    {speech.meeting && (
-                      <div className="text-sm text-gray-600">
-                        {speech.meeting.meeting_type} - {speech.meeting.title}
-                        {speech.meeting.meeting_date && (
-                          <span className="ml-2">
-                            ({new Date(speech.meeting.meeting_date).toLocaleDateString('ko-KR')})
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-gray-800 line-clamp-3">
-                    {speech.summary || speech.speech_text.substring(0, 200) + '...'}
-                  </p>
-                  {speech.keywords && speech.keywords.length > 0 && (
-                    <div className="mt-2 flex gap-2 flex-wrap">
-                      {speech.keywords.map((keyword: string, idx: number) => (
-                        <span key={idx} className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs">
-                          #{keyword}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <SpeechCard
+                  key={speech.id}
+                  speech={speech}
+                  showMeetingInfo={true}
+                  expandable={true}
+                />
               ))}
             </div>
           )}
@@ -267,33 +259,37 @@ export default async function CouncillorDetailPage({
 
         {/* Votes Section */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">표결 기록</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">표결 기록</h2>
+            {votes && votes.length > 0 && (
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-gray-600">
+                  총 {votes.length}건
+                </span>
+                {votes.some(v => v.is_verified) && (
+                  <span className="text-green-600">
+                    검증: {votes.filter(v => v.is_verified).length}건
+                  </span>
+                )}
+                {votes.some(v => !v.is_verified) && (
+                  <span className="text-yellow-600">
+                    미검증: {votes.filter(v => !v.is_verified).length}건
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
           {!votes || votes.length === 0 ? (
             <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-600">
-              표결 기록이 없거나 데이터가 수집되지 않았습니다.
+              <p className="text-lg font-medium mb-2">표결 기록이 없습니다</p>
+              <p className="text-sm">
+                이 의원의 표결 기록이 아직 수집되지 않았거나, AI 분석이 진행 중입니다.
+              </p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow divide-y">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
               {votes.map((vote) => (
-                <div key={vote.id} className="p-4 flex items-start justify-between">
-                  <div className="flex-1">
-                    {vote.bill && (
-                      <>
-                        <h3 className="font-semibold text-gray-900">{vote.bill.title}</h3>
-                        {vote.bill.bill_type && (
-                          <p className="text-sm text-gray-600 mt-1">{vote.bill.bill_type}</p>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ml-4 ${
-                    vote.vote_cast === '찬성' ? 'bg-green-100 text-green-800' :
-                    vote.vote_cast === '반대' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {vote.vote_cast}
-                  </span>
-                </div>
+                <VoteCard key={vote.id} vote={vote} showBillInfo={true} />
               ))}
             </div>
           )}

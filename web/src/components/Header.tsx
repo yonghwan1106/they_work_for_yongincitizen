@@ -12,6 +12,9 @@ export default function Header() {
             <Link href="/councillors" className="text-gray-700 hover:text-gray-900 transition-colors">
               의원 소개
             </Link>
+            <Link href="/speeches" className="text-gray-700 hover:text-gray-900 transition-colors">
+              발언 검색
+            </Link>
             <Link href="/meetings" className="text-gray-700 hover:text-gray-900 transition-colors">
               회의록
             </Link>

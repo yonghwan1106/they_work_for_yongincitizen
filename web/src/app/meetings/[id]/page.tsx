@@ -26,6 +26,16 @@ export default async function MeetingDetailPage({ params }: PageProps) {
     notFound()
   }
 
+  // Fetch speeches from this meeting
+  const { data: speeches } = await supabase
+    .from('speeches')
+    .select(`
+      *,
+      councillor:councillors(id, name, party, district)
+    `)
+    .eq('meeting_id', id)
+    .order('speech_order', { ascending: true })
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
@@ -90,6 +100,87 @@ export default async function MeetingDetailPage({ params }: PageProps) {
           </div>
         )}
       </div>
+
+      {/* Speeches Section */}
+      {speeches && speeches.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">발언 목록</h2>
+            <div className="text-sm text-gray-600">
+              총 {speeches.length}건의 발언
+            </div>
+          </div>
+          <div className="space-y-6">
+            {speeches.map((speech) => (
+              <div key={speech.id} className="border-b last:border-b-0 pb-6 last:pb-0">
+                {/* Councillor Info */}
+                {speech.councillor && (
+                  <div className="mb-3">
+                    <Link
+                      href={`/councillors/${speech.councillor.id}`}
+                      className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      <span>{speech.councillor.name}</span>
+                      {speech.councillor.party && (
+                        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                          {speech.councillor.party}
+                        </span>
+                      )}
+                      {speech.councillor.district && (
+                        <span className="text-xs text-gray-500">
+                          {speech.councillor.district}
+                        </span>
+                      )}
+                    </Link>
+                  </div>
+                )}
+
+                {/* Speech Content */}
+                <div>
+                  {speech.summary ? (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          🤖 AI 요약
+                        </span>
+                      </div>
+                      <p className="text-gray-900 leading-relaxed mb-3">
+                        {speech.summary}
+                      </p>
+                      <details>
+                        <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-700">
+                          원문 보기
+                        </summary>
+                        <p className="mt-2 text-sm text-gray-700 bg-gray-50 p-4 rounded-lg leading-relaxed whitespace-pre-wrap">
+                          {speech.speech_text}
+                        </p>
+                      </details>
+                    </div>
+                  ) : (
+                    <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                      {speech.speech_text}
+                    </p>
+                  )}
+                </div>
+
+                {/* Keywords */}
+                {speech.keywords && speech.keywords.length > 0 && (
+                  <div className="mt-3 flex gap-2 flex-wrap">
+                    {speech.keywords.map((keyword: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700"
+                      >
+                        #{keyword}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Transcript Content */}
       {meeting.transcript_text ? (
