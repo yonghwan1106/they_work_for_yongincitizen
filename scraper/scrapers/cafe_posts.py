@@ -3,35 +3,118 @@
 Scraper for Naver Cafe posts from 용인블루
 https://cafe.naver.com/yonginblue
 
-Note: Naver Cafe scraping requires browser automation (Selenium/Playwright).
-For now, using sample data that can be manually updated.
+Uses RSS feed for reliable data access.
 """
 import logging
 from datetime import datetime
 from utils.db import get_supabase_client
+import re
+import sys
 
-logging.basicConfig(level=logging.INFO)
+# Fix Windows encoding
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
+
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
-def scrape_cafe_posts(max_posts=10):
+def scrape_cafe_posts_with_rss(max_posts=10):
     """
-    Get recent posts from Naver Cafe 용인블루
-
-    Note: Naver Cafe scraping is complex due to dynamic content and authentication.
-    For now, returning sample data. Manual updates recommended through Supabase dashboard.
+    Scrape recent posts from Naver Cafe 용인블루 using RSS feed
 
     Args:
-        max_posts: Maximum number of posts to return (default: 10)
+        max_posts: Maximum number of posts to scrape (default: 10)
 
     Returns:
         List of post dictionaries
     """
-    logger.info("Getting cafe posts from 용인블루")
+    try:
+        import feedparser
+    except ImportError:
+        logger.error("feedparser not installed. Install with: pip install feedparser")
+        return get_fallback_posts()
 
-    # Sample posts (these should be manually updated in Supabase or via better scraper)
-    logger.warning("Using sample cafe data - implement Playwright/Selenium for auto-scraping")
+    logger.info("Fetching posts from RSS feed...")
+    posts = []
 
-    sample_posts = [
+    try:
+        # Naver Cafe RSS URL format
+        # https://cafe.naver.com/[cafe_name].xml or
+        # https://cafe.naver.com/ArticleSearchList.nhn?search.clubid=[id]&search.media=0&search.searchdate=&search.defaultValue=1&search.exact=&search.include=&search.exclude=&search.include.and=&search.sortBy=date&search.viewtype=title&search.page=1
+
+        # Try RSS feed for yonginblue
+        rss_url = "https://cafe.naver.com/yonginblue.xml"
+
+        logger.info(f"Fetching RSS from: {rss_url}")
+        feed = feedparser.parse(rss_url)
+
+        if not feed.entries:
+            logger.warning("No entries found in RSS feed")
+            return get_fallback_posts()
+
+        logger.info(f"Found {len(feed.entries)} entries in RSS feed")
+
+        for idx, entry in enumerate(feed.entries[:max_posts]):
+            try:
+                # Extract article ID from link
+                article_id = None
+                link = entry.get('link', '')
+
+                # Try different URL patterns
+                match = re.search(r'/(\d+)$', link) or re.search(r'articleid=(\d+)', link)
+                if match:
+                    article_id = match.group(1)
+                else:
+                    # Use entry ID or generate from link
+                    article_id = entry.get('id', str(idx))
+
+                # Get title
+                title = entry.get('title', 'No title')
+
+                # Get author
+                author = entry.get('author', '알 수 없음')
+
+                # Get published date
+                pub_date = ''
+                if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                    dt = datetime(*entry.published_parsed[:6])
+                    pub_date = dt.strftime('%Y.%m.%d')
+                elif hasattr(entry, 'published'):
+                    pub_date = entry.published[:10].replace('-', '.')
+
+                # Check if notice (usually in title or category)
+                is_notice = '[공지]' in title or '공지' in title.lower()
+
+                post = {
+                    'id': article_id,
+                    'title': title.replace('[공지]', '').replace('[필독]', '').strip(),
+                    'author': author,
+                    'post_date': pub_date,
+                    'views': '0',  # RSS doesn't provide view count
+                    'url': link,
+                    'is_notice': is_notice,
+                }
+
+                posts.append(post)
+                logger.info(f"  [{len(posts)}] {title[:50]}...")
+
+            except Exception as e:
+                logger.error(f"Error parsing RSS entry {idx}: {e}")
+                continue
+
+        logger.info(f"Successfully fetched {len(posts)} posts from RSS")
+
+    except Exception as e:
+        logger.error(f"RSS fetching failed: {e}")
+        logger.warning("Falling back to sample data...")
+        return get_fallback_posts()
+
+    return posts if posts else get_fallback_posts()
+
+def get_fallback_posts():
+    """Return fallback sample posts if RSS fails"""
+    logger.warning("Using fallback sample data")
+    return [
         {
             'id': '584',
             'title': '용인블루, 용인시 에너지 주권(主權) 확보할 \'용인에너지공사, YECo\' 설립 공식 제안',
@@ -41,46 +124,20 @@ def scrape_cafe_posts(max_posts=10):
             'url': 'https://cafe.naver.com/yonginblue/584',
             'is_notice': True,
         },
-        {
-            'id': '583',
-            'title': '[용인블루 재반박 성명서] 박은선 위원장의 \'책임 회피성 변명\', 본질을 흐리는 언론 기만 행위',
-            'author': '하이젠버그',
-            'post_date': '2025.10.16',
-            'views': '12',
-            'url': 'https://cafe.naver.com/yonginblue/583',
-            'is_notice': False,
-        },
-        {
-            'id': '582',
-            'title': '[보도자료] 용인시, 5년간 \'쌈짓돈\'처럼 쓴 특별교부세 500억 원… "목적 잃고 선심성 사업에 편중"',
-            'author': '하이젠버그',
-            'post_date': '2025.10.16',
-            'views': '19',
-            'url': 'https://cafe.naver.com/yonginblue/582',
-            'is_notice': True,
-        },
-        {
-            'id': '580',
-            'title': '[보도자료] 박은선 용인시의회 윤리특별위원장 직무유기 혐의로 형사 고발',
-            'author': '하이젠버그',
-            'post_date': '2025.10.13',
-            'views': '79',
-            'url': 'https://cafe.naver.com/yonginblue/580',
-            'is_notice': True,
-        },
-        {
-            'id': '579',
-            'title': '용인시의회 홈페이지 게시물 등록일자 소급 조작 의혹 관련, 긴급 정보공개 청구',
-            'author': '하이젠버그',
-            'post_date': '2025.10.11',
-            'views': '48',
-            'url': 'https://cafe.naver.com/yonginblue/579',
-            'is_notice': True,
-        },
     ]
 
-    logger.info(f"Returning {len(sample_posts)} sample posts")
-    return sample_posts[:max_posts]
+def scrape_cafe_posts(max_posts=10):
+    """
+    Get recent posts from Naver Cafe 용인블루
+
+    Args:
+        max_posts: Maximum number of posts to return (default: 10)
+
+    Returns:
+        List of post dictionaries
+    """
+    logger.info("Getting cafe posts from 용인블루")
+    return scrape_cafe_posts_with_rss(max_posts)
 
 def upsert_cafe_posts(posts):
     """
