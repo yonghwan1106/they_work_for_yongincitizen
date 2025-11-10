@@ -49,7 +49,7 @@ export function getFileUrl(
   thumb?: string
 ): string {
   const pb = getPocketBase();
-  const url = pb.files.getUrl({ collectionId, id: recordId } as any, filename, { thumb });
+  const url = pb.files.getUrl({ collectionId, id: recordId } as { collectionId: string; id: string }, filename, { thumb });
   return url;
 }
 

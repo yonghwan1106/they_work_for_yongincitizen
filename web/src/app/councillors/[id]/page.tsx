@@ -36,7 +36,7 @@ export default async function CouncillorDetailPage({
         sort: '-created',
         expand: 'meeting'
       }).then(result => result.items)
-    } catch (e) {
+    } catch {
       // Speeches collection might not exist yet
       speeches = []
     }
@@ -48,7 +48,7 @@ export default async function CouncillorDetailPage({
         sort: '-is_verified,-created',
         expand: 'bill'
       }).then(result => result.items)
-    } catch (e) {
+    } catch {
       // Votes collection might not exist yet
       votes = []
     }

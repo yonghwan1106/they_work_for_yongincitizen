@@ -25,7 +25,7 @@ export default async function SpeechesPage({ searchParams }: PageProps) {
 
   try {
     // Build filter string
-    let filters: string[] = []
+    const filters: string[] = []
 
     // Search filter - search in speech_text or summary
     if (query) {
@@ -56,7 +56,7 @@ export default async function SpeechesPage({ searchParams }: PageProps) {
     }).then(result => result.items)
 
     const keywordCounts = new Map<string, number>()
-    allSpeeches.forEach((speech: any) => {
+    allSpeeches.forEach((speech) => {
       if (speech.keywords && Array.isArray(speech.keywords)) {
         speech.keywords.forEach((kw: string) => {
           keywordCounts.set(kw, (keywordCounts.get(kw) || 0) + 1)

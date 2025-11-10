@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     // Transform data to match frontend expectations
-    const transformedPosts = posts.map((post: any) => ({
+    const transformedPosts = posts.map((post) => ({
       id: post.id,
       title: post.title,
       author: post.author || '알 수 없음',

@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     try {
       // Try to update existing record
       data = await pb.collection('cafe_posts').update(articleId.toString(), postData);
-    } catch (e) {
+    } catch {
       // If record doesn't exist, create it
       data = await pb.collection('cafe_posts').create(postData);
     }

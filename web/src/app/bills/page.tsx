@@ -18,7 +18,7 @@ export default async function BillsPage({
 
   try {
     // Build filter string
-    let filters: string[] = []
+    const filters: string[] = []
 
     if (params.status) {
       filters.push(`status = "${params.status}"`)
@@ -46,8 +46,8 @@ export default async function BillsPage({
       fields: 'status,bill_type'
     })
 
-    statuses = Array.from(new Set(allBills.map((b: any) => b.status).filter(Boolean))) as string[]
-    billTypes = Array.from(new Set(allBills.map((b: any) => b.bill_type).filter(Boolean))) as string[]
+    statuses = Array.from(new Set(allBills.map((b) => b.status).filter(Boolean))) as string[]
+    billTypes = Array.from(new Set(allBills.map((b) => b.bill_type).filter(Boolean))) as string[]
   } catch (err) {
     console.error('Error fetching bills:', err)
     error = err

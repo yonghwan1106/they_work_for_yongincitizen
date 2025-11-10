@@ -28,7 +28,7 @@ export default async function MeetingDetailPage({ params }: PageProps) {
         sort: 'speech_order',
         expand: 'councillor'
       })
-    } catch (e) {
+    } catch {
       // Speeches collection might not exist yet
       speeches = []
     }

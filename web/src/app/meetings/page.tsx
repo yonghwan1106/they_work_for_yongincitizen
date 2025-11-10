@@ -41,7 +41,7 @@ export default async function MeetingsPage({
     })
 
     meetingTypes = Array.from(
-      new Set(allMeetings.map((m: any) => m.meeting_type).filter(Boolean))
+      new Set(allMeetings.map((m) => m.meeting_type).filter(Boolean))
     ) as string[]
   } catch (err) {
     console.error('Error fetching meetings:', err)
