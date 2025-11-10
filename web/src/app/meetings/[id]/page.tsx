@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { pocketbase } from '@/lib/pocketbase/client'
+import { MeetingExpanded, SpeechExpanded } from '@/types/pocketbase-types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
@@ -10,31 +11,35 @@ interface PageProps {
 
 export default async function MeetingDetailPage({ params }: PageProps) {
   const { id } = await params
-  const supabase = await createClient()
 
-  // Fetch meeting details
-  const { data: meeting, error } = await supabase
-    .from('meetings')
-    .select(`
-      *,
-      committee:committees(name, type)
-    `)
-    .eq('id', id)
-    .single()
+  let meeting: MeetingExpanded | null = null
+  let speeches: SpeechExpanded[] = []
 
-  if (error || !meeting) {
+  try {
+    // Fetch meeting details with committee expansion
+    meeting = await pocketbase.collection('meetings').getOne<MeetingExpanded>(id, {
+      expand: 'committee'
+    })
+
+    // Fetch speeches from this meeting (if speeches collection exists)
+    try {
+      speeches = await pocketbase.collection('speeches').getFullList<SpeechExpanded>({
+        filter: `meeting = "${id}"`,
+        sort: 'speech_order',
+        expand: 'councillor'
+      })
+    } catch (e) {
+      // Speeches collection might not exist yet
+      speeches = []
+    }
+  } catch (error) {
+    console.error('Error fetching meeting:', error)
     notFound()
   }
 
-  // Fetch speeches from this meeting
-  const { data: speeches } = await supabase
-    .from('speeches')
-    .select(`
-      *,
-      councillor:councillors(id, name, party, district)
-    `)
-    .eq('meeting_id', id)
-    .order('speech_order', { ascending: true })
+  if (!meeting) {
+    notFound()
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -64,9 +69,9 @@ export default async function MeetingDetailPage({ params }: PageProps) {
             {new Date(meeting.meeting_date).toLocaleDateString('ko-KR')}
           </div>
 
-          {meeting.committee && (
+          {meeting.expand?.committee && (
             <div>
-              <span className="font-semibold">위원회:</span> {meeting.committee.name}
+              <span className="font-semibold">위원회:</span> {meeting.expand.committee.name}
             </div>
           )}
 
@@ -114,21 +119,21 @@ export default async function MeetingDetailPage({ params }: PageProps) {
             {speeches.map((speech) => (
               <div key={speech.id} className="border-b last:border-b-0 pb-6 last:pb-0">
                 {/* Councillor Info */}
-                {speech.councillor && (
+                {speech.expand?.councillor && (
                   <div className="mb-3">
                     <Link
-                      href={`/councillors/${speech.councillor.id}`}
+                      href={`/councillors/${speech.expand.councillor.id}`}
                       className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
                     >
-                      <span>{speech.councillor.name}</span>
-                      {speech.councillor.party && (
+                      <span>{speech.expand.councillor.name}</span>
+                      {speech.expand.councillor.party && (
                         <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
-                          {speech.councillor.party}
+                          {speech.expand.councillor.party}
                         </span>
                       )}
-                      {speech.councillor.district && (
+                      {speech.expand.councillor.district && (
                         <span className="text-xs text-gray-500">
-                          {speech.councillor.district}
+                          {speech.expand.councillor.district}
                         </span>
                       )}
                     </Link>

@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { pocketbase } from '@/lib/pocketbase/client'
+import { MeetingExpanded } from '@/types/pocketbase-types'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -9,32 +10,43 @@ export default async function MeetingsPage({
   searchParams: Promise<{ q?: string; type?: string }>
 }) {
   const params = await searchParams
-  const supabase = await createClient()
 
-  let query = supabase
-    .from('meetings')
-    .select('*, committee:committees(name)')
-    .order('meeting_date', { ascending: false })
-    .limit(50)
+  let meetings: MeetingExpanded[] = []
+  let meetingTypes: string[] = []
+  let error = null
 
-  if (params.type) {
-    query = query.eq('meeting_type', params.type)
+  try {
+    // Build filter string
+    let filter = ''
+
+    if (params.type) {
+      filter = `meeting_type = "${params.type}"`
+    }
+
+    if (params.q) {
+      const searchFilter = `title ~ "${params.q}"`
+      filter = filter ? `${filter} && ${searchFilter}` : searchFilter
+    }
+
+    // Fetch meetings with committee expansion
+    meetings = await pocketbase.collection('meetings').getList<MeetingExpanded>(1, 50, {
+      filter: filter || undefined,
+      sort: '-meeting_date',
+      expand: 'committee'
+    }).then(result => result.items)
+
+    // Get unique meeting types
+    const allMeetings = await pocketbase.collection('meetings').getFullList({
+      fields: 'meeting_type'
+    })
+
+    meetingTypes = Array.from(
+      new Set(allMeetings.map((m: any) => m.meeting_type).filter(Boolean))
+    ) as string[]
+  } catch (err) {
+    console.error('Error fetching meetings:', err)
+    error = err
   }
-
-  if (params.q) {
-    query = query.ilike('title', `%${params.q}%`)
-  }
-
-  const { data: meetings, error } = await query
-
-  // Get unique meeting types
-  const { data: allMeetings } = await supabase
-    .from('meetings')
-    .select('meeting_type')
-
-  const meetingTypes = Array.from(
-    new Set(allMeetings?.map(m => m.meeting_type).filter(Boolean))
-  ) as string[]
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -94,7 +106,7 @@ export default async function MeetingsPage({
           </p>
           <p className="text-sm text-yellow-700">
             {error
-              ? 'Supabase 연결을 확인해주세요.'
+              ? 'PocketBase 연결을 확인해주세요.'
               : params.q
               ? '다른 검색어로 시도해보세요.'
               : '데이터 수집 스크립트를 실행하여 회의록을 추가해주세요.'
@@ -124,9 +136,9 @@ export default async function MeetingsPage({
                           {meeting.meeting_type}
                         </span>
                       )}
-                      {meeting.committee?.name && (
+                      {meeting.expand?.committee?.name && (
                         <span className="bg-gray-100 px-2 py-1 rounded">
-                          {meeting.committee.name}
+                          {meeting.expand.committee.name}
                         </span>
                       )}
                       {meeting.session_number && (

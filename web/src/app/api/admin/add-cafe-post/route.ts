@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import PocketBase from 'pocketbase';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,15 +25,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize Supabase client with service role key
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    // Initialize PocketBase client with admin auth
+    const pocketbaseUrl = process.env.NEXT_PUBLIC_POCKETBASE_URL!;
+    const adminEmail = process.env.POCKETBASE_ADMIN_EMAIL!;
+    const adminPwd = process.env.POCKETBASE_ADMIN_PASSWORD!;
 
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase environment variables');
+    if (!pocketbaseUrl || !adminEmail || !adminPwd) {
+      throw new Error('Missing PocketBase environment variables');
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const pb = new PocketBase(pocketbaseUrl);
+    await pb.admins.authWithPassword(adminEmail, adminPwd);
 
     // Prepare post data
     const now = new Date();
@@ -47,19 +49,17 @@ export async function POST(request: NextRequest) {
       views: '0',
       url: `https://cafe.naver.com/yonginblue/${articleId}`,
       is_notice: isNotice || false,
-      updated_at: now.toISOString(),
+      scraped_at: now.toISOString(),
     };
 
-    // Upsert to database
-    const { data, error } = await supabase
-      .from('cafe_posts')
-      .upsert(postData)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Supabase error:', error);
-      throw error;
+    // Create or update in database
+    let data;
+    try {
+      // Try to update existing record
+      data = await pb.collection('cafe_posts').update(articleId.toString(), postData);
+    } catch (e) {
+      // If record doesn't exist, create it
+      data = await pb.collection('cafe_posts').create(postData);
     }
 
     return NextResponse.json({

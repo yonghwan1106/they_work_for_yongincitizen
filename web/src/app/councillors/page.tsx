@@ -1,7 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { pocketbase } from '@/lib/pocketbase/client'
 import CouncillorCard from '@/components/CouncillorCard'
 import Link from 'next/link'
-import { Councillor } from '@/types'
+import { Councillor } from '@/types/pocketbase-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,37 +11,40 @@ export default async function CouncillorsPage({
   searchParams: Promise<{ councillor_type?: string; party?: string; district?: string }>
 }) {
   const params = await searchParams
-  const supabase = await createClient()
 
-  // Build query
-  let query = supabase
-    .from('councillors')
-    .select('*')
-    .eq('is_active', true)
-    .order('name')
+  let councillors: Councillor[] = []
+  let allCouncillors: Councillor[] = []
+  let error = null
 
-  // Apply filters
-  if (params.councillor_type) {
-    query = query.eq('councillor_type', params.councillor_type)
+  try {
+    // Build filter string
+    let filter = 'is_active = true'
+
+    if (params.councillor_type) {
+      filter += ` && councillor_type = "${params.councillor_type}"`
+    }
+    if (params.party) {
+      filter += ` && party = "${params.party}"`
+    }
+    if (params.district) {
+      filter += ` && district = "${params.district}"`
+    }
+
+    // Fetch filtered councillors
+    councillors = await pocketbase.collection('councillors').getFullList<Councillor>({
+      filter,
+      sort: 'name'
+    })
+
+    // Get all councillors for filter options
+    allCouncillors = await pocketbase.collection('councillors').getFullList<Councillor>({
+      filter: 'is_active = true',
+      fields: 'councillor_type,party,district'
+    })
+  } catch (err) {
+    console.error('Error fetching councillors:', err)
+    error = err
   }
-  if (params.party) {
-    query = query.eq('party', params.party)
-  }
-  if (params.district) {
-    query = query.eq('district', params.district)
-  }
-
-  const { data: councillors, error } = await query
-
-  if (error) {
-    console.error('Error fetching councillors:', error)
-  }
-
-  // Get unique councillor types, parties and districts for filters
-  const { data: allCouncillors } = await supabase
-    .from('councillors')
-    .select('councillor_type, party, district')
-    .eq('is_active', true)
 
   // District name mapping with actual dong/eup names
   const districtNames: { [key: string]: string } = {
@@ -186,7 +189,7 @@ export default async function CouncillorsPage({
           </p>
           <p className="text-sm text-yellow-700">
             {error
-              ? 'Supabase 연결을 확인하고 .env.local 파일의 설정을 확인해주세요.'
+              ? 'PocketBase 연결을 확인하고 .env.local 파일의 설정을 확인해주세요.'
               : '데이터 수집 스크립트를 실행하여 의원 정보를 추가해주세요.'
             }
           </p>

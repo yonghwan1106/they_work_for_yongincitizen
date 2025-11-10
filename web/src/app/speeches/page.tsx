@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { pocketbase } from '@/lib/pocketbase/client'
+import { SpeechExpanded } from '@/types/pocketbase-types'
 import Link from 'next/link'
 import SpeechCard from '@/components/SpeechCard'
 
@@ -18,56 +19,61 @@ export default async function SpeechesPage({ searchParams }: PageProps) {
   const keyword = params.keyword || ''
   const sort = params.sort || 'latest'
 
-  const supabase = await createClient()
+  let speeches: SpeechExpanded[] = []
+  let topKeywords: string[] = []
+  let error = null
 
-  // Build query
-  let speechQuery = supabase
-    .from('speeches')
-    .select(`
-      *,
-      meeting:meetings(id, title, meeting_date, meeting_type),
-      councillor:councillors(id, name, party, district)
-    `)
+  try {
+    // Build filter string
+    let filters: string[] = []
 
-  // Search filter
-  if (query) {
-    speechQuery = speechQuery.or(`speech_text.ilike.%${query}%,summary.ilike.%${query}%`)
-  }
+    // Search filter - search in speech_text or summary
+    if (query) {
+      filters.push(`(speech_text ~ "${query}" || summary ~ "${query}")`)
+    }
 
-  // Keyword filter
-  if (keyword) {
-    speechQuery = speechQuery.contains('keywords', [keyword])
-  }
+    // Keyword filter
+    if (keyword) {
+      filters.push(`keywords ~ "${keyword}"`)
+    }
 
-  // Sorting
-  if (sort === 'latest') {
-    speechQuery = speechQuery.order('created_at', { ascending: false })
-  } else if (sort === 'oldest') {
-    speechQuery = speechQuery.order('created_at', { ascending: true })
-  }
+    const filter = filters.length > 0 ? filters.join(' && ') : undefined
 
-  speechQuery = speechQuery.limit(50)
+    // Determine sort order
+    const sortOrder = sort === 'oldest' ? 'created' : '-created'
 
-  const { data: speeches, error } = await speechQuery
+    // Fetch speeches with meeting and councillor expansion
+    speeches = await pocketbase.collection('speeches').getList<SpeechExpanded>(1, 50, {
+      filter,
+      sort: sortOrder,
+      expand: 'meeting,councillor'
+    }).then(result => result.items)
 
-  // Get top keywords for filter
-  const { data: allSpeeches } = await supabase
-    .from('speeches')
-    .select('keywords')
-    .not('keywords', 'is', null)
-    .limit(100)
+    // Get top keywords for filter
+    const allSpeeches = await pocketbase.collection('speeches').getList(1, 100, {
+      filter: 'keywords != ""',
+      fields: 'keywords'
+    }).then(result => result.items)
 
-  const keywordCounts = new Map<string, number>()
-  allSpeeches?.forEach(speech => {
-    speech.keywords?.forEach((kw: string) => {
-      keywordCounts.set(kw, (keywordCounts.get(kw) || 0) + 1)
+    const keywordCounts = new Map<string, number>()
+    allSpeeches.forEach((speech: any) => {
+      if (speech.keywords && Array.isArray(speech.keywords)) {
+        speech.keywords.forEach((kw: string) => {
+          keywordCounts.set(kw, (keywordCounts.get(kw) || 0) + 1)
+        })
+      }
     })
-  })
 
-  const topKeywords = Array.from(keywordCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 20)
-    .map(([kw]) => kw)
+    topKeywords = Array.from(keywordCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([kw]) => kw)
+  } catch (err) {
+    console.error('Error fetching speeches:', err)
+    error = err
+    // If speeches collection doesn't exist yet, just show empty state
+    speeches = []
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -182,21 +188,21 @@ export default async function SpeechesPage({ searchParams }: PageProps) {
           {speeches.map((speech) => (
             <div key={speech.id} className="border-b last:border-b-0">
               {/* Councillor Info */}
-              {speech.councillor && (
+              {speech.expand?.councillor && (
                 <div className="px-6 pt-4">
                   <Link
-                    href={`/councillors/${speech.councillor.id}`}
+                    href={`/councillors/${speech.expand.councillor.id}`}
                     className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
                   >
-                    <span>{speech.councillor.name}</span>
-                    {speech.councillor.party && (
+                    <span>{speech.expand.councillor.name}</span>
+                    {speech.expand.councillor.party && (
                       <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
-                        {speech.councillor.party}
+                        {speech.expand.councillor.party}
                       </span>
                     )}
-                    {speech.councillor.district && (
+                    {speech.expand.councillor.district && (
                       <span className="text-xs text-gray-500">
-                        {speech.councillor.district}
+                        {speech.expand.councillor.district}
                       </span>
                     )}
                   </Link>
@@ -204,10 +210,7 @@ export default async function SpeechesPage({ searchParams }: PageProps) {
               )}
 
               <SpeechCard
-                speech={{
-                  ...speech,
-                  meeting: speech.meeting || null
-                }}
+                speech={speech}
                 showMeetingInfo={true}
                 expandable={true}
               />

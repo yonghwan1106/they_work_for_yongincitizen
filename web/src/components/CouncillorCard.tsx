@@ -1,12 +1,13 @@
 import Link from 'next/link'
-import { Councillor } from '@/types'
+import { Councillor } from '@/types/pocketbase-types'
+import { getCouncillorPhotoUrl } from '@/lib/pocketbase/client'
 
 interface CouncillorCardProps {
   councillor: Councillor
 }
 
 export default function CouncillorCard({ councillor }: CouncillorCardProps) {
-  const getPartyColor = (party: string | null) => {
+  const getPartyColor = (party: string | null | undefined) => {
     if (!party) return 'bg-gray-100 text-gray-800'
 
     const partyLower = party.toLowerCase()
@@ -16,14 +17,17 @@ export default function CouncillorCard({ councillor }: CouncillorCardProps) {
     return 'bg-purple-100 text-purple-800'
   }
 
+  // Get PocketBase photo URL
+  const photoUrl = councillor.photo ? getCouncillorPhotoUrl(councillor.id, councillor.photo) : null
+
   return (
     <Link href={`/councillors/${councillor.id}`}>
       <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 cursor-pointer">
         <div className="flex items-start gap-4">
           <div className="w-20 h-20 bg-gray-200 rounded-full flex-shrink-0 overflow-hidden">
-            {councillor.photo_url ? (
+            {photoUrl ? (
               <img
-                src={councillor.photo_url}
+                src={photoUrl}
                 alt={councillor.name}
                 className="w-full h-full object-cover"
               />

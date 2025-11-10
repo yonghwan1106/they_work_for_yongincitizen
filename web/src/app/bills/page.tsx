@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { pocketbase } from '@/lib/pocketbase/client'
+import { BillExpanded } from '@/types/pocketbase-types'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -9,35 +10,48 @@ export default async function BillsPage({
   searchParams: Promise<{ status?: string; type?: string; q?: string }>
 }) {
   const params = await searchParams
-  const supabase = await createClient()
 
-  let query = supabase
-    .from('bills')
-    .select('*, proposer:councillors(name, party)')
-    .order('proposal_date', { ascending: false })
-    .limit(50)
+  let bills: BillExpanded[] = []
+  let statuses: string[] = []
+  let billTypes: string[] = []
+  let error = null
 
-  if (params.status) {
-    query = query.eq('status', params.status)
+  try {
+    // Build filter string
+    let filters: string[] = []
+
+    if (params.status) {
+      filters.push(`status = "${params.status}"`)
+    }
+
+    if (params.type) {
+      filters.push(`bill_type = "${params.type}"`)
+    }
+
+    if (params.q) {
+      filters.push(`title ~ "${params.q}"`)
+    }
+
+    const filter = filters.length > 0 ? filters.join(' && ') : undefined
+
+    // Fetch bills with proposer expansion
+    bills = await pocketbase.collection('bills').getList<BillExpanded>(1, 50, {
+      filter,
+      sort: '-proposal_date',
+      expand: 'proposer'
+    }).then(result => result.items)
+
+    // Get unique statuses and types
+    const allBills = await pocketbase.collection('bills').getFullList({
+      fields: 'status,bill_type'
+    })
+
+    statuses = Array.from(new Set(allBills.map((b: any) => b.status).filter(Boolean))) as string[]
+    billTypes = Array.from(new Set(allBills.map((b: any) => b.bill_type).filter(Boolean))) as string[]
+  } catch (err) {
+    console.error('Error fetching bills:', err)
+    error = err
   }
-
-  if (params.type) {
-    query = query.eq('bill_type', params.type)
-  }
-
-  if (params.q) {
-    query = query.ilike('title', `%${params.q}%`)
-  }
-
-  const { data: bills, error } = await query
-
-  // Get unique statuses and types
-  const { data: allBills } = await supabase
-    .from('bills')
-    .select('status, bill_type')
-
-  const statuses = Array.from(new Set(allBills?.map(b => b.status).filter(Boolean))) as string[]
-  const billTypes = Array.from(new Set(allBills?.map(b => b.bill_type).filter(Boolean))) as string[]
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -135,7 +149,7 @@ export default async function BillsPage({
           </p>
           <p className="text-sm text-yellow-700">
             {error
-              ? 'Supabase 연결을 확인해주세요.'
+              ? 'PocketBase 연결을 확인해주세요.'
               : params.q
               ? '다른 검색어로 시도해보세요.'
               : '데이터 수집 스크립트를 실행하여 의안 정보를 추가해주세요.'
@@ -176,10 +190,10 @@ export default async function BillsPage({
                           {bill.bill_type}
                         </span>
                       )}
-                      {bill.proposer && (
+                      {bill.expand?.proposer && (
                         <span>
-                          발의: {bill.proposer.name}
-                          {bill.proposer.party && ` (${bill.proposer.party})`}
+                          발의: {bill.expand.proposer.name}
+                          {bill.expand.proposer.party && ` (${bill.expand.proposer.party})`}
                         </span>
                       )}
                       {bill.proposal_date && (

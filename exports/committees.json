@@ -1,0 +1,58 @@
+[
+  {
+    "id": "605487bf-cc2d-4ae5-9579-b78321f7b87f",
+    "name": "의회운영위원회",
+    "name_en": null,
+    "type": "상임위원회",
+    "description": null,
+    "created_at": "2025-10-16T04:13:02.147495+00:00"
+  },
+  {
+    "id": "64b9bdcc-666f-4683-b433-6a556bf9fa0e",
+    "name": "윤리특별위원회",
+    "name_en": null,
+    "type": "특별위원회",
+    "description": null,
+    "created_at": "2025-10-16T04:13:02.2523+00:00"
+  },
+  {
+    "id": "625c7a86-5a4f-412f-8f9a-1d506f77235a",
+    "name": "자치행정위원회",
+    "name_en": null,
+    "type": "상임위원회",
+    "description": null,
+    "created_at": "2025-10-16T04:13:02.366761+00:00"
+  },
+  {
+    "id": "746bb233-1ca7-4572-9d51-4681058c828a",
+    "name": "문화복지위원회",
+    "name_en": null,
+    "type": "상임위원회",
+    "description": null,
+    "created_at": "2025-10-16T04:13:02.475639+00:00"
+  },
+  {
+    "id": "6d194786-b9e3-42fd-8f4d-00a64631ffbb",
+    "name": "경제환경위원회",
+    "name_en": null,
+    "type": "상임위원회",
+    "description": null,
+    "created_at": "2025-10-16T04:13:02.564302+00:00"
+  },
+  {
+    "id": "4b8756f5-0798-479f-a162-0101991229d3",
+    "name": "예산결산특별위원회",
+    "name_en": null,
+    "type": "특별위원회",
+    "description": null,
+    "created_at": "2025-10-16T04:13:02.65328+00:00"
+  },
+  {
+    "id": "62218eaf-c2be-48f4-8c67-e4fc6f94f97c",
+    "name": "도시건설위원회",
+    "name_en": null,
+    "type": "상임위원회",
+    "description": null,
+    "created_at": "2025-10-16T04:13:02.721599+00:00"
+  }
+]

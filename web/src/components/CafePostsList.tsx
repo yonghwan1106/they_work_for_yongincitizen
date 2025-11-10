@@ -40,8 +40,13 @@ export default function CafePostsList() {
 
   if (posts.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500">
-        카페 글을 불러올 수 없습니다.
+      <div className="p-8 text-center">
+        <p className="text-gray-600 mb-2">
+          📭 아직 등록된 카페 글이 없습니다
+        </p>
+        <p className="text-sm text-gray-500">
+          카페에 새 글이 올라오면 여기에 표시됩니다
+        </p>
       </div>
     );
   }

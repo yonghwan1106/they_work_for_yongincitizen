@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { pocketbase, getCouncillorPhotoUrl } from '@/lib/pocketbase/client'
+import { Councillor, Bill, SpeechExpanded, VoteExpanded } from '@/types/pocketbase-types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import SpeechCard from '@/components/SpeechCard'
@@ -12,49 +13,56 @@ export default async function CouncillorDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createClient()
 
-  // Fetch councillor data
-  const { data: councillor, error } = await supabase
-    .from('councillors')
-    .select('*')
-    .eq('id', id)
-    .single()
+  let councillor: Councillor | null = null
+  let bills: Bill[] = []
+  let speeches: SpeechExpanded[] = []
+  let votes: VoteExpanded[] = []
 
-  if (error || !councillor) {
+  try {
+    // Fetch councillor data
+    councillor = await pocketbase.collection('councillors').getOne<Councillor>(id)
+
+    // Fetch bills proposed by this councillor
+    bills = await pocketbase.collection('bills').getList<Bill>(1, 10, {
+      filter: `proposer = "${id}"`,
+      sort: '-proposal_date'
+    }).then(result => result.items)
+
+    // Fetch speeches by this councillor (if speeches collection exists)
+    try {
+      speeches = await pocketbase.collection('speeches').getList<SpeechExpanded>(1, 20, {
+        filter: `councillor = "${id}"`,
+        sort: '-created',
+        expand: 'meeting'
+      }).then(result => result.items)
+    } catch (e) {
+      // Speeches collection might not exist yet
+      speeches = []
+    }
+
+    // Fetch votes by this councillor (if votes collection exists)
+    try {
+      votes = await pocketbase.collection('votes').getList<VoteExpanded>(1, 20, {
+        filter: `councillor = "${id}"`,
+        sort: '-is_verified,-created',
+        expand: 'bill'
+      }).then(result => result.items)
+    } catch (e) {
+      // Votes collection might not exist yet
+      votes = []
+    }
+  } catch (error) {
+    console.error('Error fetching councillor:', error)
     notFound()
   }
 
-  // Fetch bills proposed by this councillor
-  const { data: bills } = await supabase
-    .from('bills')
-    .select('*')
-    .eq('proposer_id', id)
-    .order('proposal_date', { ascending: false })
-    .limit(10)
+  if (!councillor) {
+    notFound()
+  }
 
-  // Fetch speeches by this councillor
-  const { data: speeches } = await supabase
-    .from('speeches')
-    .select(`
-      *,
-      meeting:meetings(id, title, meeting_date, meeting_type)
-    `)
-    .eq('councillor_id', id)
-    .order('created_at', { ascending: false })
-    .limit(20)
-
-  // Fetch votes by this councillor (both verified and unverified)
-  const { data: votes } = await supabase
-    .from('votes')
-    .select(`
-      *,
-      bill:bills(id, title, bill_type, bill_number, proposal_date)
-    `)
-    .eq('councillor_id', id)
-    .order('is_verified', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(20)
+  // Get photo URL
+  const photoUrl = councillor.photo ? getCouncillorPhotoUrl(councillor.id, councillor.photo) : null
 
   const getPartyColor = (party: string | null) => {
     if (!party) return 'bg-gray-100 text-gray-800'
@@ -81,9 +89,9 @@ export default async function CouncillorDetailPage({
       <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-32 h-32 bg-gray-200 rounded-full flex-shrink-0 overflow-hidden">
-            {councillor.photo_url ? (
+            {photoUrl ? (
               <img
-                src={councillor.photo_url}
+                src={photoUrl}
                 alt={councillor.name}
                 className="w-full h-full object-cover"
               />

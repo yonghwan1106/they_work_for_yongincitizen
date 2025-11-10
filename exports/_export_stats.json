@@ -1,0 +1,24 @@
+{
+  "exportDate": "2025-11-10T05:09:40.046Z",
+  "stats": {
+    "total": 13,
+    "success": 5,
+    "failed": 1,
+    "empty": 7
+  },
+  "tables": [
+    "councillors",
+    "committees",
+    "councillor_committees",
+    "meetings",
+    "bills",
+    "bill_cosponsors",
+    "speeches",
+    "votes",
+    "district_mapping",
+    "user_profiles",
+    "subscriptions",
+    "notification_logs",
+    "chat_history"
+  ]
+}

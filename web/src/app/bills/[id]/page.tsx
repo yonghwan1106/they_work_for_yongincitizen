@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { pocketbase } from '@/lib/pocketbase/client'
+import { BillExpanded } from '@/types/pocketbase-types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
@@ -10,19 +11,20 @@ interface PageProps {
 
 export default async function BillDetailPage({ params }: PageProps) {
   const { id } = await params
-  const supabase = await createClient()
 
-  // Fetch bill details with proposer information
-  const { data: bill, error } = await supabase
-    .from('bills')
-    .select(`
-      *,
-      proposer:councillors!proposer_id(id, name, party, district)
-    `)
-    .eq('id', id)
-    .single()
+  let bill: BillExpanded | null = null
 
-  if (error || !bill) {
+  try {
+    // Fetch bill details with proposer expansion
+    bill = await pocketbase.collection('bills').getOne<BillExpanded>(id, {
+      expand: 'proposer'
+    })
+  } catch (error) {
+    console.error('Error fetching bill:', error)
+    notFound()
+  }
+
+  if (!bill) {
     notFound()
   }
 
@@ -75,17 +77,17 @@ export default async function BillDetailPage({ params }: PageProps) {
             </div>
           )}
 
-          {bill.proposer && (
+          {bill.expand?.proposer && (
             <div>
               <span className="font-semibold">발의자:</span>{' '}
               <Link
-                href={`/councillors/${bill.proposer.id}`}
+                href={`/councillors/${bill.expand.proposer.id}`}
                 className="text-blue-600 hover:underline"
               >
-                {bill.proposer.name}
+                {bill.expand.proposer.name}
               </Link>
-              {bill.proposer.party && (
-                <span className="text-sm text-gray-500 ml-2">({bill.proposer.party})</span>
+              {bill.expand.proposer.party && (
+                <span className="text-sm text-gray-500 ml-2">({bill.expand.proposer.party})</span>
               )}
             </div>
           )}
