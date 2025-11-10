@@ -96,6 +96,28 @@ export interface BillCosponsor extends BaseRecord {
 }
 
 /**
+ * Speech (발언)
+ */
+export interface Speech extends BaseRecord {
+  meeting: string; // Relation ID
+  councillor: string; // Relation ID
+  speech_text: string;
+  speech_order?: number;
+  summary?: string; // AI-generated summary
+  keywords?: string[]; // JSON array
+}
+
+/**
+ * Vote (표결)
+ */
+export interface Vote extends BaseRecord {
+  bill: string; // Relation ID
+  councillor: string; // Relation ID
+  vote_cast: '찬성' | '반대' | '기권';
+  is_verified: boolean; // Human-verified data
+}
+
+/**
  * Expanded types (with relations)
  */
 
@@ -126,6 +148,20 @@ export interface BillExpanded extends Bill {
 }
 
 export interface BillCosponsorExpanded extends BillCosponsor {
+  expand?: {
+    bill?: Bill;
+    councillor?: Councillor;
+  };
+}
+
+export interface SpeechExpanded extends Speech {
+  expand?: {
+    meeting?: Meeting;
+    councillor?: Councillor;
+  };
+}
+
+export interface VoteExpanded extends Vote {
   expand?: {
     bill?: Bill;
     councillor?: Councillor;
