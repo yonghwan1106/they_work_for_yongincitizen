@@ -1,23 +1,8 @@
 import Link from 'next/link'
-
-interface Vote {
-  id: string
-  vote_cast: string
-  is_verified: boolean
-  verified_by: string | null
-  verified_at: string | null
-  created_at: string
-  bill?: {
-    id: string
-    title: string
-    bill_type: string | null
-    bill_number: string | null
-    proposal_date: string | null
-  } | null
-}
+import { VoteExpanded } from '@/types/pocketbase-types'
 
 interface VoteCardProps {
-  vote: Vote
+  vote: VoteExpanded
   showBillInfo?: boolean
 }
 
@@ -34,29 +19,29 @@ export default function VoteCard({ vote, showBillInfo = true }: VoteCardProps) {
     <div className="p-6 hover:bg-gray-50 transition-colors border-b last:border-b-0">
       <div className="flex items-start justify-between gap-4">
         {/* Bill Info */}
-        {showBillInfo && vote.bill && (
+        {showBillInfo && vote.expand?.bill && (
           <div className="flex-1">
             <Link
-              href={`/bills/${vote.bill.id}`}
+              href={`/bills/${vote.expand.bill.id}`}
               className="text-gray-900 font-semibold hover:text-blue-600 transition-colors"
             >
-              {vote.bill.title}
+              {vote.expand.bill.title}
             </Link>
 
             <div className="flex gap-2 mt-2 text-sm text-gray-600 flex-wrap">
-              {vote.bill.bill_number && (
+              {vote.expand.bill.bill_number && (
                 <span className="bg-gray-100 px-2 py-0.5 rounded">
-                  {vote.bill.bill_number}
+                  {vote.expand.bill.bill_number}
                 </span>
               )}
-              {vote.bill.bill_type && (
+              {vote.expand.bill.bill_type && (
                 <span className="bg-gray-100 px-2 py-0.5 rounded">
-                  {vote.bill.bill_type}
+                  {vote.expand.bill.bill_type}
                 </span>
               )}
-              {vote.bill.proposal_date && (
+              {vote.expand.bill.proposal_date && (
                 <span className="text-gray-500">
-                  {new Date(vote.bill.proposal_date).toLocaleDateString('ko-KR')}
+                  {new Date(vote.expand.bill.proposal_date).toLocaleDateString('ko-KR')}
                 </span>
               )}
             </div>

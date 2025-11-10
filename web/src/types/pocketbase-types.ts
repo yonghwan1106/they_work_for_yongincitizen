@@ -105,6 +105,7 @@ export interface Speech extends BaseRecord {
   speech_order?: number;
   summary?: string; // AI-generated summary
   keywords?: string[]; // JSON array
+  created_at: string; // Alias for created (for backwards compatibility)
 }
 
 /**
@@ -115,6 +116,9 @@ export interface Vote extends BaseRecord {
   councillor: string; // Relation ID
   vote_cast: '찬성' | '반대' | '기권';
   is_verified: boolean; // Human-verified data
+  verified_by?: string | null;
+  verified_at?: string | null;
+  created_at: string; // Alias for created (for backwards compatibility)
 }
 
 /**

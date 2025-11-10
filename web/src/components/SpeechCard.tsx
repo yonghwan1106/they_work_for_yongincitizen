@@ -1,22 +1,8 @@
 import Link from 'next/link'
-
-interface Speech {
-  id: string
-  speech_text: string
-  summary: string | null
-  keywords: string[] | null
-  speech_order: number | null
-  created_at: string
-  meeting?: {
-    id: string
-    title: string
-    meeting_date: string
-    meeting_type: string | null
-  } | null
-}
+import { SpeechExpanded } from '@/types/pocketbase-types'
 
 interface SpeechCardProps {
-  speech: Speech
+  speech: SpeechExpanded
   showMeetingInfo?: boolean
   expandable?: boolean
 }
@@ -31,20 +17,20 @@ export default function SpeechCard({
   return (
     <div className="p-6 hover:bg-gray-50 transition-colors border-b last:border-b-0">
       {/* Meeting Info */}
-      {showMeetingInfo && speech.meeting && (
+      {showMeetingInfo && speech.expand?.meeting && (
         <div className="mb-3">
           <Link
-            href={`/meetings/${speech.meeting.id}`}
+            href={`/meetings/${speech.expand.meeting.id}`}
             className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
           >
             <span className="font-medium">
-              {speech.meeting.meeting_type || '회의'}
+              {speech.expand.meeting.meeting_type || '회의'}
             </span>
             {' - '}
-            {speech.meeting.title}
-            {speech.meeting.meeting_date && (
+            {speech.expand.meeting.title}
+            {speech.expand.meeting.meeting_date && (
               <span className="ml-2 text-gray-500">
-                ({new Date(speech.meeting.meeting_date).toLocaleDateString('ko-KR')})
+                ({new Date(speech.expand.meeting.meeting_date).toLocaleDateString('ko-KR')})
               </span>
             )}
           </Link>
